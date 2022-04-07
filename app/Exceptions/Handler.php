@@ -2,105 +2,40 @@
 
 namespace App\Exceptions;
 
-use Throwable;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Illuminate\Validation\ValidationException;
-
+use Throwable;
 
 class Handler extends ExceptionHandler
 {
     /**
-     * A list of the exception types that should not be reported.
+     * A list of the exception types that are not reported.
      *
-     * @var array
+     * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
-        AuthorizationException::class,
-        HttpException::class,
-        ModelNotFoundException::class,
-        ValidationException::class,
+        //
     ];
 
     /**
-     * Report or log an exception.
+     * A list of the inputs that are never flashed for validation exceptions.
      *
-     * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
-     *
-     * @param  \Throwable  $exception
-     * @return void
-     *
-     * @throws \Exception
+     * @var array<int, string>
      */
-    public function report(Throwable $exception)
-    {
-        parent::report($exception);
-    }
+    protected $dontFlash = [
+        'current_password',
+        'password',
+        'password_confirmation',
+    ];
 
     /**
-     * Render an exception into an HTTP response.
+     * Register the exception handling callbacks for the application.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Throwable  $exception
-     * @return \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
-     *
-     * @throws \Throwable
+     * @return void
      */
-    public function render($request, Throwable $exception)
+    public function register()
     {
-        if (app()->environment() !== 'production') {
-            $e = $exception;
-
-            if ($e instanceof ModelNotFoundException) {
-                $e = new NotFoundHttpException($e->getMessage(), $e);
-            }
-
-            // 全局错误处理
-            if ($e instanceof ValidationException) {
-                $response = [
-                    "msg" => $e->getMessage(),
-                    "code" => $e->status,
-                    "data" => $e->errors(),
-                    'status' => false
-
-                ];
-            } elseif ($e instanceof HttpException) {
-                $response = [
-                    "data" => Response::$statusTexts[$e->getStatusCode()] ?? null,
-                    "code" => $e->getStatusCode(),
-                    'status' => false
-
-                ];
-            } else {
-                $response = [
-                    'data' => $e->getMessage(),
-                    'code' => 500,
-                    'status' => false
-                ];
-            }
-
-            if (env('APP_DEBUG', config('app.debug', false))) {
-                $response['data'] = [
-                    'exception' => get_class($e),
-                    'file' => $e->getFile(),
-                    'line' => $e->getLine(),
-                    'trace' => collect($e->getTrace())->map(function ($trace) {
-                        return Arr::except($trace, ['args']);
-                    })->all(),
-                ];
-            }
-
-            return response()->json($response, $response['code']);
-        } else {
-            return parent::render($request, $exception);
-        }
-        // 
-        // return failed('Something wrong.', 0);
-
+        $this->reportable(function (Throwable $e) {
+            //
+        });
     }
 }
