@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Pterodactyl;
 
 use Exception;
+use App\Jobs\AsyncJob;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Models\Pterodactyl\Nest;
+use App\Models\Pterodactyl\Node;
 use App\Models\Pterodactyl\NestEgg;
 use App\Models\Pterodactyl\Package;
+use App\Models\Pterodactyl\Service;
 use App\Http\Controllers\Controller;
 use App\Models\Pterodactyl\Location;
 use App\Drivers\Server\Panel\Pterodactyl\Access;
-use App\Jobs\AsyncJob;
-use App\Models\Pterodactyl\Node;
-use App\Models\Pterodactyl\Service;
+use App\Jobs\Product\Pterodactyl;
+use Laravel\SerializableClosure\SerializableClosure;
 
 class ServerController extends Controller
 {
@@ -138,30 +140,11 @@ class ServerController extends Controller
 
     public function setup()
     {
-
-        dispatch(function() {
-            echo 1;
-        });
-
-        return false;
-        // dispatch(new AsyncJob(function() {
-        //     echo 1;
-        // }));
         // 先验证参数
-        $this->validate($this->request, $this->create_validate);
+        $this->request->validate($this->create_validate);
 
         // 验证镜像是否可用
         $egg = NestEgg::findOrFail($this->request->egg_id);
-
-        // dd(1);
-        // {
-        //     "CHEATS": "false",
-        //     "GAMEMODE": "survival",
-        //     "DIFFICULTY": "hard",
-        //     "SERVERNAME": "Amber.edge.st",
-        //     "BEDROCK_VERSION": "latest",
-        //     "LD_LIBRARY_PATH": "."
-        // }
 
         // 验证docker_image是否存在
         if (!in_array($this->request->docker_image, $egg->docker_images)) {
@@ -195,38 +178,38 @@ class ServerController extends Controller
         // 执行创建服务器
         // dispatch to async job
 
-        dispatch(new AsyncJob(function () use ($access, $panel_user, $egg, $environment, $package, $allocation, $node) {
-            // $create = $access->create(
-            //     $this->request->name,
-            //     $panel_user['id'],
-            //     $egg->egg_id,
-            //     $this->request->docker_image,
-            //     $egg->startup,
-            //     $environment,
-            //     $package->memory,
-            //     $package->swap,
-            //     $package->disk_space,
-            //     $package->io,
-            //     $package->cpu_limit,
-            //     $package->databases,
-            //     $package->backups,
-            //     $allocation
-            // );
+        $create = $access->create(
+            $this->request->name,
+            $panel_user['id'],
+            $egg->egg_id,
+            $this->request->docker_image,
+            $egg->startup,
+            $environment,
+            $package->memory,
+            $package->swap,
+            $package->disk_space,
+            $package->io,
+            $package->cpu_limit,
+            $package->databases,
+            $package->backups,
+            $allocation
+        );
 
-            // $server = $create['attributes'];
+        // dispatch(new Pterodactyl($create));
 
-            // $write_to_service = [
-            //     'package_id' => $package->id,
-            //     'docker_image' => $this->request->docker_image,
-            //     'server_id' => $server['id'],
-            //     'node_id' => $node->id,
-            //     'user_id' => user()->id,
-            //     'order_id' => $this->order->id
-            // ];
+        $server = $create['attributes'];
 
-            // // 创建成功, 写入
-            // Service::create($write_to_service);
-        }));
+        $write_to_service = [
+            'package_id' => $package->id,
+            'docker_image' => $this->request->docker_image,
+            'server_id' => $server['id'],
+            'node_id' => $node->id,
+            'user_id' => user()->id,
+            'order_id' => $this->order->id
+        ];
+
+        // 创建成功, 写入
+        Service::create($write_to_service);
 
 
         return true;

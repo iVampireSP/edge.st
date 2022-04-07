@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Laravel\SerializableClosure\SerializableClosure;
 
 function success($data = null, $msg = 'success')
 {

@@ -57,6 +57,53 @@ class Access extends Driver
         return $this->api->createServer($data);
     }
 
+    public function generateCreateArray(
+        string $server_name,
+        int $panel_user_id,
+        int $egg_id,
+        string $docker_image,
+        string $startup,
+        array $environment,
+        int $memory,
+        int $swap,
+        int $disk,
+        int $io,
+        int $cpu,
+        int $databases,
+        int $backups,
+        int $allocation_id
+    ) {
+        $data = [
+            'name' => $server_name,
+            'user' => $panel_user_id,
+            'egg' => $egg_id,
+            'docker_image' => $docker_image,
+            'startup' => $startup,
+            'environment' => $environment,
+            'limits' => [
+                'memory' => $memory,
+                'swap' => $swap,
+                'disk' => $disk,
+                'io' => $io,
+                'cpu' => $cpu,
+            ],
+            'feature_limits' => [
+                'databases' => $databases,
+                'backups' => $backups,
+            ],
+            "allocation" => [
+                "default" => $allocation_id
+            ]
+        ];
+
+        return $data;
+    }
+
+    public function createArray($data)
+    {
+        return $this->api->createServer($data);
+    }
+
     public function delete($server_id)
     {
         return $this->api->delete('/servers/' . $server_id);
