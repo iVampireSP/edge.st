@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Task extends Model
 {
     protected $fillable = [
-        'status', 'comment', 'progress', 'order_id', 'user_id'
+        'status', 'comment', 'progress', 'order_id', 'user_id', 'end_at'
+    ];
+
+    protected $casts = [
+        'end_at' => 'datetime'
     ];
 
     public static function userTasks() {

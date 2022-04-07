@@ -131,8 +131,37 @@ function reverse_slash($str)
     return $str;
 }
 
-function reverse_backslash($str) {
+function reverse_backslash($str)
+{
     $str = str_replace('\\', '/', $str);
 
     return $str;
+}
+
+function asyncJob($closure, $user_id = null, $message = null)
+{
+    // create a new task
+    $task = App\Models\Task::create([
+        'user_id' => $user_id,
+        'comment' => $message ?? 'Task started at ' . \Illuminate\Support\Carbon::now()->toDateTimeString() . '.',
+        'status' => 'pending',
+    ]);
+
+    dispatch(function () use ($closure, $task) {
+        $closure();
+
+        $task->update([
+            'status' => 'success',
+            'end_at' => \Illuminate\Support\Carbon::now()
+        ]);
+    })->catch(function () use ($task) {
+        $task->update([
+            'status' => 'failed',
+            'end_at' => \Illuminate\Support\Carbon::now()
+        ]);
+    });
+
+
+
+    return $task;
 }
