@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             // who suspended the order?
-            $table->string('suspended_by')->nullable()->index();
+            $table->string('suspended_by')->nullable()->index()->before('suspended_at');
         });
     }
 
