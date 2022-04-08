@@ -62,7 +62,7 @@ return new class extends Migration
              * suspended: 订单暂停，无法使用服务
              */
             $table->string('status')->default('open')->index();
-            $table->dateTime('cancelled')->nullable();
+            $table->dateTime('cancelled_at')->nullable();
             $table->dateTime('suspended_at')->nullable();
 
             // 打开订单时的IP
