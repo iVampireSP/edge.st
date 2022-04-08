@@ -280,6 +280,7 @@ class Order extends Model
 
         $order->status = 'ongoing';
         $order->suspended_at = null;
+        $order->suspended_by = null;
         // 保存一次
         $order->save();
 
