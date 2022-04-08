@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             dispatch(new \App\Jobs\Billing\AutoCost());
             dispatch(new \App\Jobs\Billing\Order\AutoCancel());
+            dispatch(new \App\Jobs\Billing\Order\AutoUnsuspendJob());
         })->everyMinute()->name('billing');
 
 

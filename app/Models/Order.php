@@ -45,7 +45,7 @@ class Order extends Model
     protected $hidden = [
         'controller', 'order_id'
     ];
-    
+
 
     protected $casts = [
         'suspended_at' => 'datetime'
@@ -168,7 +168,7 @@ class Order extends Model
         return $order_id;
     }
 
-    public static function suspend(self $order)
+    public static function suspend(self $order, $operator = 'auto')
     {
         if ($order->status == 'suspended' && !is_null($order->suspended_at)) {
             throw new OrderCancelled('order is already suspended.');
@@ -182,6 +182,7 @@ class Order extends Model
 
         // 将订单 status 设置为 suspend
         $order->status = 'suspended';
+        $order->suspended_by = $operator;
         // 保存一次
         $order->save();
 
@@ -278,6 +279,7 @@ class Order extends Model
 
 
         $order->status = 'ongoing';
+        $order->suspended_at = null;
         // 保存一次
         $order->save();
 
@@ -294,6 +296,21 @@ class Order extends Model
         return true;
     }
 
+    public static function autoUnsuspend()
+    {
+        self::where('status', 'suspended')->where('suspended_by', 'auto')->with('user')->chunk(100, function ($orders) {
+            foreach ($orders as $order) {
+                if ($order->user->balance >= 1) {
+                    self::unsuspend($order);
+                } else {
+                    continue;
+                }
+            }
+        });
+
+        return true;
+    }
+
 
     public function invoice()
     {
@@ -303,5 +320,9 @@ class Order extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function user() {
+        return $this->belongsTo(User::class);
     }
 }
