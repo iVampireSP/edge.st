@@ -78,6 +78,9 @@ class User extends Authenticatable
         $lock->block(5);
         try {
             $user->balance -= $amount;
+            if ($user->balance < 0) {
+                $result = false;
+            }
             // if ($user->balance < 0) {
             //     write('Balance not enough.');
             //     throw new BalanceNotEnough();
