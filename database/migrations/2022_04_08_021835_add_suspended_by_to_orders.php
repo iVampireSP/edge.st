@@ -14,8 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::table('orders', function (Blueprint $table) {
-            // 区别是自动暂停还是人工暂停
-            $table->boolean('auto_suspend')->after('suspended_at')->default(false);
+            // who suspended the order?
+            $table->string('suspended_by')->nullable()->index();
         });
     }
 
@@ -27,7 +27,8 @@ return new class extends Migration
     public function down()
     {
         Schema::table('orders', function (Blueprint $table) {
-            //
+            // drop this migrate
+            $table->dropColumn('suspended_by');
         });
     }
 };
