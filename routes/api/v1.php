@@ -13,7 +13,7 @@ Route::group(['prefix' => 'products', 'as' => 'product.'], function () {
 
 
 // Billing
-Route::group(['prefix' => 'billings', 'as' => 'billings.'], function () {
+Route::group(['prefix' => 'billing', 'as' => 'billings.'], function () {
     Route::get('/orders', [Controllers\Billing\OrderController::class, 'index'])->name('index');
     Route::get('/orders/{order_id}', [Controllers\Billing\OrderController::class, 'show'])->name('show');
     Route::post('/orders/{order_id}', [Controllers\Billing\OrderController::class, 'show'])->name('pay');

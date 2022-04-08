@@ -247,11 +247,18 @@ class Order extends Model
     // 自动关闭 suspended_at 超过7天的订单
     public static function autoCancel()
     {
-        self::where('status', 'suspended')->where('suspended_at', Carbon::parse('7 days ago'))->chunk(100, function ($orders) {
+        // cancel orders between now and Get the last 7 days
+
+        self::where('status', 'suspended')->where('suspended_at', '<', Carbon::now()->subDays(7))->chunk(100, function ($orders) {
             foreach ($orders as $order) {
-                return self::cancel($order);
+                self::cancel($order);
             }
         });
+        // self::where('status', 'suspended')->where('suspended_at', Carbon::parse('7 days ago'))->chunk(100, function ($orders) {
+        //     foreach ($orders as $order) {
+        //         return self::cancel($order);
+        //     }
+        // });
     }
 
     // 重试关闭失败的订单
@@ -259,7 +266,7 @@ class Order extends Model
     {
         self::where('status', 'cancelled')->where('cancelled_at', null)->chunk(100, function ($orders) {
             foreach ($orders as $order) {
-                return self::cancel($order);
+                self::cancel($order);
             }
         });
     }

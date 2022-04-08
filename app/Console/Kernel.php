@@ -20,7 +20,13 @@ class Kernel extends ConsoleKernel
             dispatch(new \App\Jobs\Billing\AutoCost());
             dispatch(new \App\Jobs\Billing\Order\AutoCancel());
             dispatch(new \App\Jobs\Billing\Order\AutoUnsuspendJob());
-        })->everyMinute()->name('billing');
+        })->daily()->name('billing');
+
+        // billing: auto unsuspend
+        $schedule->call(function () {
+            dispatch(new \App\Jobs\Billing\Order\AutoUnsuspendJob());
+        })->everyMinute()->name('billing.auto_unsuspend');
+
 
 
         // $schedule->command('inspire')->hourly();
