@@ -111,12 +111,12 @@ class Access extends Driver
 
     public function suspend($server_id)
     {
-        return $this->api->suspendServer('/servers/' . $server_id);
+        return $this->api->suspendServer($server_id);
     }
 
     public function unsuspend($server_id)
     {
-        return $this->api->unsuspendServer('/servers/' . $server_id);
+        return $this->api->unsuspendServer($server_id);
     }
 
     public function update()

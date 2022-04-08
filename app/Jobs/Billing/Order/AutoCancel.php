@@ -5,7 +5,7 @@ namespace App\Jobs\Billing\Order;
 use App\Jobs\Job;
 use App\Models\Order;
 
-class AutoClose extends Job
+class AutoCancel extends Job
 {
     /**
      * Create a new job instance.
@@ -24,6 +24,6 @@ class AutoClose extends Job
      */
     public function handle()
     {
-        Order::autoClose();
+        Order::autoCancel();
     }
 }

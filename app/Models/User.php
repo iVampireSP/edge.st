@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Notifications\Notifiable;
+use App\Exceptions\User\BalanceNotEnough;
 use App\Exceptions\User\BalanceLockTimeout;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -67,6 +68,7 @@ class User extends Authenticatable
 
     public static function costBalance($amount, $user_id = false)
     {
+
         if (!$user_id) {
             $user = auth()->user();
         } else {
@@ -80,16 +82,9 @@ class User extends Authenticatable
             $user->balance -= $amount;
             if ($user->balance < 0) {
                 $result = false;
+
+                write('Balance not enough.', $user->id);
             }
-            // if ($user->balance < 0) {
-            //     write('Balance not enough.');
-            //     throw new BalanceNotEnough();
-            // } else {
-            //     $user->save();
-            //     write('Order successfully updated.');
-            //     write('Your balance is now: ' . $user->balance);
-            //     $result = true;
-            // }
         } catch (LockTimeoutException) {
             throw new BalanceLockTimeout();
             write('Unable to update user balance');
@@ -97,8 +92,19 @@ class User extends Authenticatable
             $user->save();
             optional($lock)->release();
         }
+
         return $result;
     }
+
+    // public static function costBalanceFail($amount, $user_id)
+    // {
+    //     $result = self::costBalance($amount, $user_id);
+
+    //     if (!$result) {
+    //         write('Balance not enough.', $user_id);
+    //         throw new BalanceNotEnough('user balance not enough.');
+    //     }
+    // }
 
 
     // 用户购买产品

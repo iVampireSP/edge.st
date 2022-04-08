@@ -15,6 +15,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        // Dispatch billing jobs
+        $schedule->call(function () {
+            dispatch(new \App\Jobs\Billing\AutoCost());
+            dispatch(new \App\Jobs\Billing\Order\AutoCancel());
+        })->everyMinute()->name('billing');
+
+
         // $schedule->command('inspire')->hourly();
     }
 

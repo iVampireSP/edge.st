@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Laravel\SerializableClosure\SerializableClosure;
 
 function success($data = null, $msg = 'success')
@@ -24,8 +25,12 @@ function failed($data = null, $msg = 'failed')
 }
 
 
-function userHas(array | object | null $model)
+function userHas(array | object | null $model, $user_id = null)
 {
+    if (app()->runningInConsole()) {
+        return true;
+    }
+
     if (is_null($model)) {
         return abort(404);
     }

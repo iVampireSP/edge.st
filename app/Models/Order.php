@@ -45,6 +45,11 @@ class Order extends Model
     protected $hidden = [
         'controller', 'order_id'
     ];
+    
+
+    protected $casts = [
+        'suspended_at' => 'datetime'
+    ];
 
     public static function createToUser(
         $user_id,

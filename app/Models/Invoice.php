@@ -8,6 +8,7 @@ use App\Exceptions\Invoice\Paid;
 use App\Exceptions\Invoice\Overdue;
 use Illuminate\Database\Eloquent\Model;
 use App\Exceptions\User\BalanceNotEnough;
+use Illuminate\Support\Facades\Log;
 
 class Invoice extends Model
 {
@@ -27,9 +28,6 @@ class Invoice extends Model
     protected $casts = [
         'paid_at' => 'datetime'
     ];
-
-
-    // ToDo: 当 status = closed 时，不扣费
 
     public static function createToOrder($order_id, $amount)
     {
@@ -98,10 +96,10 @@ class Invoice extends Model
     // 扣除所有 current_amount
     public static function autoCost()
     {
-
         // 在自动扣费失败后，会将订单标记为暂停
         // 订单暂停后，服务也会被暂停
         // 如果订单暂停超过7天，则关闭订单。请求关闭（退款）也是如此。
+
 
         self::where('status', 'ongoing')->with('order')->chunk(100, function ($invoices) {
             foreach ($invoices as $invoice) {
@@ -109,17 +107,15 @@ class Invoice extends Model
                 self::calcCurrentAmount($invoice);
 
                 // 检查订单是否关闭
-                if ($invoice->order->status == 'closed') {
+                if ($invoice->order->status == 'suspended') {
                     // 订单关闭的话则不扣费
                     continue;
                 }
 
                 // 扣费
+                $result = self::userPayInvoice($invoice);;
 
-                try {
-                    self::userPayInvoice($invoice);
-                } catch (BalanceNotEnough) {
-                    // 暂停账单
+                if (!$result) {
                     Order::suspend($invoice->order);
                 }
             }
@@ -173,8 +169,10 @@ class Invoice extends Model
             $pay_amount = $invoice->amount;
         }
 
-
-        User::costBalance($pay_amount, $invoice->user_id);
+        $cost = User::costBalance($pay_amount, $invoice->user_id);
+        if (!$cost) {
+            return false;
+        }
 
         // 更新发票 已经支付的 amount
         $invoice->amount_paid += $pay_amount;
@@ -204,6 +202,8 @@ class Invoice extends Model
 
 
         $invoice->save();
+
+        return true;
     }
 
 
