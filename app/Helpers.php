@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use App\Events\UserEvent;
+use App\Jobs\MessageQueueJob;
 use Illuminate\Support\Facades\Log;
 use Laravel\SerializableClosure\SerializableClosure;
 
@@ -56,6 +58,18 @@ function write($msg, $user_id = false)
         $user_id = auth()->id();
     }
 
+    broadcast(new UserEvent($user_id, [
+        'type' => 'message',
+        'data' => $msg,
+    ]));
+
+    return true;
+}
+
+// broadcast to message channel
+function mq($msg, $channel = 'default', $type = 'message')
+{
+    MessageQueueJob::dispatch($msg, $channel, $type);
     return true;
 }
 
@@ -166,8 +180,6 @@ function asyncJob($closure, $user_id = null, $message = null)
             'end_at' => \Illuminate\Support\Carbon::now()
         ]);
     });
-
-
 
     return $task;
 }
